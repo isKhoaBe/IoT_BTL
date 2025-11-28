@@ -11,10 +11,6 @@
 //extern WebServer server;
 
 //extern bool isAPMode;
-
-
-
-
 String mainPage();
 String settingsPage();
 

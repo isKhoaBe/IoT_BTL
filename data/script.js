@@ -1,6 +1,8 @@
 // ==================== WEBSOCKET ====================
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
+// var gaugeTemp;
+// var gaugeHumi;
 
 window.addEventListener('load', onLoad);
 
@@ -39,9 +41,47 @@ function onMessage(event) {
     console.log("📩 Nhận:", event.data);
     try {
         var data = JSON.parse(event.data);
-        // Có thể thêm xử lý riêng nếu cần (ví dụ cập nhật trạng thái)
+        var page = data.page;
+        var value = data.value;
+
+        // 1. Xử lý dữ liệu Sensor (Task 3)
+        if (page === "home" && value) {
+            gaugeTemp.refresh(value.temp);
+            gaugeHumi.refresh(value.humi);
+
+            var temp = value.temp
+            var humi = value.humi;
+
+            if (gaugeTemp) gaugeTemp.refresh(temp);
+            if (gaugeHumi) gaugeHumi.refresh(humi);
+
+            if (typeof updateGaugeTextColor === "function") {
+                updateGaugeTextColor();
+            }
+        } 
+        
+        // 2. Xử lý phản hồi trạng thái thiết bị (Task 4)
+        else if (page === "device_update" && value) {
+            const receivedGPIO = value.gpio;
+            const receivedStatus = (value.status === "ON");
+            
+            // Tìm và cập nhật trạng thái trong mảng relayList
+            const relay = relayList.find(r => r.gpio == receivedGPIO);
+            if (relay) {
+                relay.state = receivedStatus;
+                renderRelays(); // Vẽ lại giao diện để hiển thị trạng thái mới
+            }
+        }
+
+        // 3. Xử lý phản hồi Cài đặt (Task 6 - Tùy chọn)
+        else if (page === "settings_status") {
+             // Nếu ESP32 gửi lại trạng thái kết nối
+             alert("Trạng thái kết nối WiFi: " + value.message);
+        }
+
     } catch (e) {
-        console.warn("Không phải JSON hợp lệ:", event.data);
+        console.warn("⚠️ Không phải JSON hợp lệ:", event.data);
+        console.error("Lỗi phân tích JSON:", e);
     }
 }
 
@@ -85,13 +125,23 @@ window.onload = function () {
         levelColorsGradient: true,
         levelColors: ["#42A5F5", "#00BCD4", "#0288D1"]
     });
+    // --- Hàm cập nhật màu chữ trong gauge ---
+    function updateGaugeTextColor() {
+        const textColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--text-color')
+            .trim();
 
-    setInterval(() => {
-        gaugeTemp.refresh(Math.floor(Math.random() * 15) + 20);
-        gaugeHumi.refresh(Math.floor(Math.random() * 40) + 40);
-    }, 3000);
+        // chọn text SVG bên trong gauge và đổi fill
+        document.querySelectorAll('#gauge_temp text, #gauge_humi text')
+            .forEach(el => el.setAttribute('fill', textColor));
+    }
+
+    // cập nhật màu ban đầu
+    updateGaugeTextColor();
+
+    // --- lưu hàm để dùng lại trong toggleTheme ---
+    window.updateGaugeTextColor = updateGaugeTextColor;
 };
-
 
 // ==================== DEVICE FUNCTIONS ====================
 function openAddRelayDialog() {
@@ -179,4 +229,93 @@ document.getElementById("settingsForm").addEventListener("submit", function (e) 
 
     Send_Data(settingsJSON);
     alert("✅ Cấu hình đã được gửi đến thiết bị!");
+});
+
+// TRONG script.js (Phần logic toggleTheme)
+function toggleTheme() {  
+    const root = document.documentElement;
+    const isCurrentlyLight = root.classList.contains('light-mode');
+
+    if (isCurrentlyLight) {
+        root.classList.remove('light-mode');
+        root.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark-mode');
+        console.log("Chế độ Tối đã bật");
+    } else {
+        root.classList.remove('dark-mode');
+        root.classList.add('light-mode');
+        localStorage.setItem('theme', 'light-mode');
+        console.log("Chế độ Sáng đã bật");
+    }
+
+    // cập nhật màu chữ cho gauge mà không render lại
+    if (typeof window.updateGaugeTextColor === 'function') {
+        window.updateGaugeTextColor();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const switchInput = document.getElementById('darkModeSwitch');
+    const savedMode = localStorage.getItem('theme');
+
+    if (savedMode) {
+        document.documentElement.classList.add(savedMode);
+        if (switchInput) switchInput.checked = (savedMode === 'dark-mode');
+    } else {
+        document.documentElement.classList.add('light-mode');
+        if (switchInput) switchInput.checked = false;
+    }
+
+    if (switchInput) {
+        switchInput.addEventListener('change', toggleTheme);
+    }
+    // === XỬ LÝ LED 1 (BLINKY) ===
+    const led1Switch = document.getElementById('led1Switch');
+    const led1Label = document.getElementById('led1StatusLabel');
+    // GPIO CỦA LED 1 (Phải khớp với LED_GPIO trong led_blinky.cpp)
+    const LED1_GPIO = 48; 
+
+    if (led1Switch) {
+        led1Switch.addEventListener('change', function() {
+            const isManualOn = this.checked;
+            
+            // Cập nhật nhãn
+            led1Label.innerText = isManualOn ? "MANUAL ON" : "OFF/AUTO";
+            
+            // Gửi lệnh WebSocket
+            const cmd = {
+                page: "device",
+                value: {
+                    gpio: LED1_GPIO,
+                    status: isManualOn ? "ON" : "OFF"
+                }
+            };
+            Send_Data(JSON.stringify(cmd));
+        });
+    }
+    // === XỬ LÝ NEOPIXEL (AUTO/MANUAL) ===
+    const neoSwitch = document.getElementById('neoModeSwitch');
+    const neoLabel = document.getElementById('neoModeLabel');
+    const NEO_GPIO = 45; 
+
+    if (neoSwitch) {
+        neoSwitch.addEventListener('change', function() {
+            const isManualMode = this.checked;
+
+            // Cập nhật nhãn
+            neoLabel.innerText = isManualMode ? "MANUAL (WHITE)" : "AUTO (HUMIDITY)";
+            
+            // Gửi lệnh WebSocket
+            // ON = Bật chế độ Manual (Sáng trắng)
+            // OFF = Tắt chế độ Manual (Về Auto)
+            const cmd = {
+                page: "device",
+                value: {
+                    gpio: NEO_GPIO,
+                    status: isManualMode ? "ON" : "OFF"
+                }
+            };
+            Send_Data(JSON.stringify(cmd));
+        });
+    }
 });

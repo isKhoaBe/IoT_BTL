@@ -15,8 +15,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
-<body>
-
+  <body class="light-mode"> 
   <!-- Thanh bên -->
   <div class="sidebar">
     <div class="logo-container">
@@ -29,6 +28,14 @@
     <div class="nav-item" onclick="showSection('device', event)">⚡ <span>Thiết bị</span></div>
     <div class="nav-item" onclick="showSection('info', event)">ℹ️ <span>Thông tin</span></div>
     <div class="nav-item" onclick="showSection('settings', event)">⚙️ <span>Cài đặt</span></div>
+
+    <div class="sidebar-footer">
+        <label class="apple-switch" for="darkModeSwitch">
+            <input type="checkbox" id="darkModeSwitch">
+            <span class="slider round"></span>
+        </label>
+        <span class="mode-label">🌙</span>
+    </div>
   </div>
 
   <!-- Nội dung chính -->
@@ -37,8 +44,8 @@
     <!-- TRANG CHỦ -->
     <div id="home" class="section fade-in">
       <header>
-        <h1>Bảng điều khiển môi trường</h1>
-        <p>Giám sát nhiệt độ và độ ẩm theo thời gian thực</p>
+        <h1>Dashboard</h1>
+        <p>Giám sát nhiệt độ và độ ẩm</p>
       </header>
 
       <div class="gauges-container">
@@ -57,12 +64,43 @@
     <!-- THIẾT BỊ -->
     <div id="device" class="section" style="display:none;">
       <header>
-        <h1>Điều khiển Relay</h1>
-        <p>Quản lý và điều khiển các relay được kết nối.</p>
+        <h1>Quản lý Thiết bị</h1>
       </header>
 
-      <div class="device-list" id="relayContainer"></div>
+      <div class="device-group-label">💡 Điều khiển LED/NeoPixel</div>
 
+      <div class="device-list">
+    
+    <div class="device-card">
+      <i class="fa-regular fa-lightbulb device-icon"></i>
+      <h3>LED Nhiệt độ</h3>
+      <p>GPIO: <span id="led1GpioDisplay">48</span></p> <div class="control-row">
+        <label class="apple-switch">
+            <input type="checkbox" id="led1Switch">
+            <span class="slider round"></span>
+        </label>
+        <span class="mode-label" id="led1StatusLabel">AUTO (ON)</span>
+      </div>
+    </div>
+
+    <div class="device-card">
+      <i class="fa-solid fa-palette device-icon"></i>
+      <h3>NeoPixel</h3>
+      <p>GPIO: <span id="neoGpioDisplay">45</span></p> <div class="control-row">
+        <label class="apple-switch">
+            <input type="checkbox" id="neoModeSwitch">
+            <span class="slider round"></span>
+        </label>
+        <span class="mode-label" id="neoModeLabel">AUTO</span>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="divider">
+
+  <div class="device-group-label">🔌 Relay mở rộng</div>
+      <div class="device-list" id="relayContainer"></div>
       <button class="add-relay-btn" onclick="openAddRelayDialog()">
         <i class="fa-solid fa-plus"></i>
       </button>
