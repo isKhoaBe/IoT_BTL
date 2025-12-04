@@ -44,6 +44,31 @@ void setup()
 
   check_info_File(0);
 
+  // Initialize WiFi BEFORE creating network tasks
+  // This ensures TCP/IP stack is ready before AsyncWebServer starts
+  if (g_wifiConfig != NULL && g_wifiConfig->mutex != NULL)
+  {
+    String ssid = "";
+    if (xSemaphoreTake(g_wifiConfig->mutex, pdMS_TO_TICKS(100)) == pdTRUE)
+    {
+      ssid = g_wifiConfig->WIFI_SSID;
+      xSemaphoreGive(g_wifiConfig->mutex);
+    }
+    
+    if (!ssid.isEmpty())
+    {
+      Serial.println("[INIT] WiFi credentials found, initializing WiFi...");
+      WiFi.mode(WIFI_STA);
+      // Don't wait for connection here, let WiFi task handle that
+      // Just initialize the network stack
+      delay(100);
+    }
+    else
+    {
+      Serial.println("[INIT] No WiFi credentials, AP mode already started");
+    }
+  }
+
   Serial.println("[INIT] Creating RTOS tasks...");
 
   xTaskCreate(Device_Control_Task, "DeviceCtrl", 8192, NULL, 3, NULL);
@@ -108,17 +133,8 @@ void setup()
   Serial.println("System running...");
   Serial.println("========================================\n");
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(LittleFS, "/index.html", "text/html"); });
-
-  server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(LittleFS, "/styles.css", "text/css"); });
-
-  server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(LittleFS, "/script.js", "application/javascript"); });
-
-  server.serveStatic("/", LittleFS, "/");
-  server.begin();
+  // Note: Server initialization is handled by Webserver_RTOS_Task
+  // Do NOT call server.begin() here to avoid double initialization
 }
 
 void loop()

@@ -1,5 +1,6 @@
 #include "led_blinky.h"
 #include "task_webserver.h"
+#include "task_check_info.h"
 #include "neo_blinky.h"
 #include <ArduinoJson.h>
 Adafruit_NeoPixel strip(LED_COUNT, NEO_PIN, NEO_GRB + NEO_KHZ800);
@@ -84,10 +85,27 @@ void Device_Control_Task(void *pvParameters)
     pinMode(LED_GPIO, OUTPUT);
 
     DeviceControlCommand cmd;
+    SettingsCommand settings;
 
     while (1)
     {
-        if (xQueueReceive(xQueueRelayControl, &cmd, portMAX_DELAY) == pdPASS)
+        // Check for settings updates first (higher priority)
+        if (xQueueReceive(xQueueSettings, &settings, 0) == pdPASS)
+        {
+            Serial.println("💾 Processing Settings from Queue...");
+            Serial.println("SSID: " + settings.ssid);
+            Serial.println("Password: " + settings.password);
+            Serial.println("Token: " + settings.token);
+            Serial.println("Server: " + settings.server);
+            Serial.print("Port: ");
+            Serial.println(settings.port);
+            
+            // Save configuration to file and restart
+            Save_info_File(settings.ssid, settings.password, settings.token, 
+                          settings.server, String(settings.port));
+        }
+        
+        if (xQueueReceive(xQueueRelayControl, &cmd, pdMS_TO_TICKS(100)) == pdPASS)
         {
             int pin = cmd.gpioPin;
             bool isWebOn = cmd.newState;
@@ -96,17 +114,21 @@ void Device_Control_Task(void *pvParameters)
             {
                 if (g_wifiConfig != NULL && xSemaphoreTake(g_wifiConfig->mutex, pdMS_TO_TICKS(100)) == pdTRUE)
                 {
+                    // When toggle is OFF, enable override to force device OFF
+                    // When toggle is ON, disable override to allow AUTO mode
                     g_wifiConfig->led1Override = !isWebOn;
                     xSemaphoreGive(g_wifiConfig->mutex);
                 }
-                if (!isWebOn)
+                if (isWebOn)
                 {
-                    digitalWrite(LED_GPIO, LOW); // OFF
-                    Serial.println("✅ LED1 (Override) set to OFF");
+                    // Toggle ON = AUTO mode, let sensor task handle it
+                    Serial.println("✅ LED1 set to AUTO mode (sensor-controlled)");
                 }
                 else
                 {
-                    Serial.println("✅ LED1 back to AUTO");
+                    // Toggle OFF = Force OFF (override)
+                    digitalWrite(LED_GPIO, LOW);
+                    Serial.println("✅ LED1 forced OFF (override active)");
                 }
             }
 
@@ -114,19 +136,23 @@ void Device_Control_Task(void *pvParameters)
             {
                 if (g_wifiConfig != NULL && xSemaphoreTake(g_wifiConfig->mutex, pdMS_TO_TICKS(100)) == pdTRUE)
                 {
+                    // When toggle is OFF, enable override to force device OFF
+                    // When toggle is ON, disable override to allow AUTO mode
                     g_wifiConfig->neoOverride = !isWebOn;
                     xSemaphoreGive(g_wifiConfig->mutex);
                 }
 
-                if (!isWebOn)
+                if (isWebOn)
                 {
-                    strip.setPixelColor(0, strip.Color(0, 0, 0));
-                    strip.show();
-                    Serial.println("✅ NeoPixel Force OFF");
+                    // Toggle ON = AUTO mode, let sensor task handle it
+                    Serial.println("✅ NeoPixel set to AUTO mode (humidity-controlled)");
                 }
                 else
                 {
-                    Serial.println("✅ NeoPixel Back to AUTO");
+                    // Toggle OFF = Force OFF (override)
+                    strip.setPixelColor(0, strip.Color(0, 0, 0));
+                    strip.show();
+                    Serial.println("✅ NeoPixel forced OFF (override active)");
                 }
             }
             else

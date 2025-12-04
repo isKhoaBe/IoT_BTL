@@ -72,7 +72,8 @@
       <div class="device-list">
     
     <div class="device-card">
-      <i class="fa-regular fa-lightbulb device-icon"></i>
+      <span class="device-icon">💡</span>
+
       <h3>LED Nhiệt độ</h3>
       <p>GPIO: <span id="led1GpioDisplay">48</span></p> <div class="control-row">
         <label class="apple-switch">
@@ -84,7 +85,8 @@
     </div>
 
     <div class="device-card">
-      <i class="fa-solid fa-palette device-icon"></i>
+      <span class="device-icon">🎨</span>
+      
       <h3>NeoPixel</h3>
       <p>GPIO: <span id="neoGpioDisplay">45</span></p> <div class="control-row">
         <label class="apple-switch">
@@ -102,7 +104,7 @@
   <div class="device-group-label">🔌 Relay mở rộng</div>
       <div class="device-list" id="relayContainer"></div>
       <button class="add-relay-btn" onclick="openAddRelayDialog()">
-        <i class="fa-solid fa-plus"></i>
+      <span class="plus-icon">+</span>
       </button>
     </div>
 
@@ -117,37 +119,37 @@
     <!-- CÀI ĐẶT -->
     <div id="settings" class="section settings-section" style="display:none;">
       <div class="settings-card">
-        <h2><i class="fa-solid fa-gear"></i> Cấu hình thiết bị</h2>
+        <h2><span class="config">🛠️</span> Cấu hình thiết bị</h2>
         <p>Nhập thông tin Wi-Fi và kết nối Core IoT của bạn bên dưới.</p>
 
         <form id="settingsForm">
           <div class="input-group">
-            <i class="fa-solid fa-wifi"></i>
+            <span class="input-icon">📡</span>
             <input type="text" id="ssid" placeholder="Tên Wi-Fi (SSID)" required>
           </div>
 
           <div class="input-group">
-            <i class="fa-solid fa-lock"></i>
+            <span class="input-icon">🔒</span>
             <input type="password" id="password" placeholder="Mật khẩu Wi-Fi" required>
           </div>
 
           <div class="input-group">
-            <i class="fa-solid fa-key"></i>
+            <span class="input-icon">🔑</span>
             <input type="text" id="token" placeholder="Mã Token Core IoT" required>
           </div>
 
           <div class="input-group">
-            <i class="fa-solid fa-server"></i>
+            <span class="input-icon">☁️</span>
             <input type="text" id="server" placeholder="Máy chủ Core IoT" required>
           </div>
 
           <div class="input-group">
-            <i class="fa-solid fa-plug"></i>
+            <span class="input-icon">🔌</span>
             <input type="number" id="port" placeholder="Cổng Core IoT" required>
           </div>
 
           <button type="submit" class="btn-save">
-            <i class="fa-solid fa-floppy-disk"></i> Lưu cấu hình
+            <span>💾</span> Lưu cấu hình
           </button>
         </form>
       </div>

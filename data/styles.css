@@ -205,9 +205,10 @@ input:checked + .slider:before {
 }
 
 .device-icon {
-  font-size    : 36px;
-  color: var(--primary-color);
-  margin-bottom: 10px;
+    font-size: 36px;
+    display: block;
+    margin-bottom: 10px;
+    line-height: 1;
 }
 
 .toggle-btn {
@@ -252,6 +253,11 @@ input:checked + .slider:before {
   cursor       : pointer;
   box-shadow   : 0 6px 20px rgba(0, 0, 0, 0.25);
   transition   : 0.3s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  color: white;
 }
 
 .add-relay-btn:hover {
@@ -259,6 +265,12 @@ input:checked + .slider:before {
   box-shadow: 0 8px 25px rgba(34, 148, 242, 0.4);
 }
 
+.plus-icon {
+    font-size: 50px;
+    font-weight: 300;
+    line-height: 0.7;
+    margin-bottom: 0px;
+}
 
 /* Settings */
 .settings-section {
@@ -299,24 +311,21 @@ input:checked + .slider:before {
   align-items   : center;
 }
 
-/* mỗi input-group là 1 dòng, cách nhau */
 .input-group {
-  position     : relative;
-  width        : 98%;
-  /* ✅ rộng gần hết khung */
-  max-width    : 760px;
-  /* ✅ dài hơn hẳn */
-  margin-bottom: 20px;
-  /* ✅ tạo khoảng cách giữa các dòng */
+  position         : relative;
+  width            : 98%;
+  max-width        : 760px;
+  margin-bottom    : 20px;
 }
 
-.input-group i {
+.input-group .input-icon {
   position : absolute;
   top      : 50%;
   left     : 18px;
-  transform: translateY(-50%);
-  color: var(--primary-color);
-  font-size: 18px;
+  transform: translateY(-55%); 
+  font-size: 22px;
+  line-height: 1;
+  z-index: 2;
 }
 
 .input-group input {
@@ -328,12 +337,14 @@ input:checked + .slider:before {
   background-color: var(--bg-color);
   transition      : all 0.3s ease;
   box-sizing      : border-box;
+  color: var(--text-color);
 }
 
 .input-group input:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 10px var(--shadow-color);
-  background-color: #fff;
+  background-color: var(--main-color);
+  outline: none;
 }
 
 /* Save Button */
@@ -349,6 +360,11 @@ input:checked + .slider:before {
   cursor       : pointer;
   box-shadow   : 0 6px 18px rgba(34, 148, 242, 0.45);
   transition   : all 0.3s ease;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .btn-save:hover {
@@ -356,6 +372,10 @@ input:checked + .slider:before {
   box-shadow: 0 8px 22px rgba(34, 148, 242, 0.55);
 }
 
+.btn-save span {
+  font-size: 1.2em;
+  line-height: 1;
+}
 
 /* Dialog */
 .dialog-overlay {

@@ -172,6 +172,11 @@ void handleWebSocketMessage(String message)
 // Task RTOS quản lý Web Server
 void Webserver_RTOS_Task(void *pvParameters)
 {
+    // Wait for WiFi to be initialized before starting the server
+    // This prevents TCP/IP stack errors
+    Serial.println("[WEBSERVER] Waiting for WiFi to initialize...");
+    vTaskDelay(pdMS_TO_TICKS(2000)); // Give WiFi time to initialize
+    
     // Khởi tạo Server ban đầu
     connnectWSV();
 

@@ -1,5 +1,8 @@
 
 #include "task_core_iot.h"
+#include "task_webserver.h"
+#include "led_blinky.h"
+#include "neo_blinky.h"
 
 constexpr uint32_t MAX_MESSAGE_SIZE = 1024U;
 
@@ -47,17 +50,90 @@ void processSharedAttributes(const Shared_Attribute_Data &data)
     }
 }
 
-RPC_Response setLedSwitchValue(const RPC_Data &data)
+// RPC method to SET LED state
+RPC_Response setValueLED_GPIO(const RPC_Data &data)
 {
-    Serial.println("Received Switch state");
+    Serial.println("Received RPC: setValueLED_GPIO");
     bool newState = data;
-    Serial.print("Switch state change: ");
-    Serial.println(newState);
-    return RPC_Response("setLedSwitchValue", newState);
+    Serial.print("LED state change to: ");
+    Serial.println(newState ? "ON" : "OFF");
+    
+    // Send command to Device Control Task via queue
+    DeviceControlCommand cmd;
+    cmd.gpioPin = LED_GPIO;
+    cmd.newState = newState;
+    
+    if (xQueueRelayControl != NULL) {
+        if (xQueueSend(xQueueRelayControl, &cmd, pdMS_TO_TICKS(100)) == pdPASS) {
+            Serial.println("LED control command sent to queue");
+        } else {
+            Serial.println("Failed to send LED control command");
+        }
+    }
+    
+    // Update LED state
+    ledState = newState;
+    
+    return RPC_Response("setValueLED_GPIO", newState);
 }
 
-const std::array<RPC_Callback, 1U> callbacks = {
-    RPC_Callback{"setLedSwitchValue", setLedSwitchValue}};
+// RPC method to GET LED state
+RPC_Response getValueLED_GPIO(const RPC_Data &data)
+{
+    Serial.println("Received RPC: getValueLED_GPIO");
+    Serial.print("Current LED state: ");
+    Serial.println(ledState ? "ON" : "OFF");
+    
+    return RPC_Response("getValueLED_GPIO", ledState);
+}
+
+// RPC method to SET NEO state
+RPC_Response setValueNEO_GPIO(const RPC_Data &data)
+{
+    Serial.println("Received RPC: setValueNEO_GPIO");
+    bool newState = data;
+    Serial.print("NEO state change to: ");
+    Serial.println(newState ? "ON" : "OFF");
+    
+    // Send command to Device Control Task via queue
+    DeviceControlCommand cmd;
+    cmd.gpioPin = NEO_PIN;
+    cmd.newState = newState;
+    
+    if (xQueueRelayControl != NULL) {
+        if (xQueueSend(xQueueRelayControl, &cmd, pdMS_TO_TICKS(100)) == pdPASS) {
+            Serial.println("NEO control command sent to queue");
+        } else {
+            Serial.println("Failed to send NEO control command");
+        }
+    }
+    
+    return RPC_Response("setValueNEO_GPIO", newState);
+}
+
+// RPC method to GET NEO state
+RPC_Response getValueNEO_GPIO(const RPC_Data &data)
+{
+    Serial.println("Received RPC: getValueNEO_GPIO");
+    // Return current override state (inverted: ON means AUTO, OFF means forced OFF)
+    bool neoState = false;
+    if (g_wifiConfig != NULL && g_wifiConfig->mutex != NULL) {
+        if (xSemaphoreTake(g_wifiConfig->mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+            neoState = !g_wifiConfig->neoOverride; // Invert because ON=AUTO, OFF=forced off
+            xSemaphoreGive(g_wifiConfig->mutex);
+        }
+    }
+    Serial.print("Current NEO state: ");
+    Serial.println(neoState ? "ON (AUTO)" : "OFF");
+    
+    return RPC_Response("getValueNEO_GPIO", neoState);
+}
+
+const std::array<RPC_Callback, 4U> callbacks = {
+    RPC_Callback{"setValueLED_GPIO", setValueLED_GPIO},
+    RPC_Callback{"getValueLED_GPIO", getValueLED_GPIO},
+    RPC_Callback{"setValueNEO_GPIO", setValueNEO_GPIO},
+    RPC_Callback{"getValueNEO_GPIO", getValueNEO_GPIO}};
 
 const Shared_Attribute_Callback attributes_callback(&processSharedAttributes, SHARED_ATTRIBUTES_LIST.cbegin(), SHARED_ATTRIBUTES_LIST.cend());
 const Attribute_Request_Callback attribute_shared_request_callback(&processSharedAttributes, SHARED_ATTRIBUTES_LIST.cbegin(), SHARED_ATTRIBUTES_LIST.cend());

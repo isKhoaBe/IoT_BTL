@@ -163,13 +163,13 @@ function renderRelays() {
         const card = document.createElement('div');
         card.className = 'device-card';
         card.innerHTML = `
-      <i class="fa-solid fa-bolt device-icon"></i>
+
       <h3>${r.name}</h3>
       <p>GPIO: ${r.gpio}</p>
       <button class="toggle-btn ${r.state ? 'on' : ''}" onclick="toggleRelay(${r.id})">
         ${r.state ? 'ON' : 'OFF'}
       </button>
-      <i class="fa-solid fa-trash delete-icon" onclick="showDeleteDialog(${r.id})"></i>
+      <span class="delete-icon" onclick="showDeleteDialog(${r.id})" style="font-size: 16px;">❌</span>
     `;
         container.appendChild(card);
     });
