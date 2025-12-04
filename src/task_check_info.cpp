@@ -15,8 +15,10 @@ void Load_info_File()
   }
   else
   {
-    if (g_wifiConfig != NULL && g_wifiConfig->mutex != NULL) {
-      if (xSemaphoreTake(g_wifiConfig->mutex, portMAX_DELAY) == pdTRUE) {
+    if (g_wifiConfig != NULL && g_wifiConfig->mutex != NULL)
+    {
+      if (xSemaphoreTake(g_wifiConfig->mutex, portMAX_DELAY) == pdTRUE)
+      {
         g_wifiConfig->WIFI_SSID = strdup(doc["WIFI_SSID"]);
         g_wifiConfig->WIFI_PASS = strdup(doc["WIFI_PASS"]);
         g_wifiConfig->CORE_IOT_TOKEN = strdup(doc["CORE_IOT_TOKEN"]);
@@ -74,15 +76,17 @@ bool check_info_File(bool check)
     }
     Load_info_File();
   }
-  
+
   bool isEmpty = true;
-  if (g_wifiConfig != NULL && g_wifiConfig->mutex != NULL) {
-    if (xSemaphoreTake(g_wifiConfig->mutex, portMAX_DELAY) == pdTRUE) {
+  if (g_wifiConfig != NULL && g_wifiConfig->mutex != NULL)
+  {
+    if (xSemaphoreTake(g_wifiConfig->mutex, portMAX_DELAY) == pdTRUE)
+    {
       isEmpty = g_wifiConfig->WIFI_SSID.isEmpty() && g_wifiConfig->WIFI_PASS.isEmpty();
       xSemaphoreGive(g_wifiConfig->mutex);
     }
   }
-  
+
   if (isEmpty)
   {
     if (!check)

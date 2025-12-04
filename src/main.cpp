@@ -121,7 +121,7 @@ void setup()
 
   xTaskCreate(Task_Toogle_BOOT,
               "Task_BOOT",
-              2048,
+              4096,
               NULL,
               5,
               NULL);
@@ -133,22 +133,14 @@ void setup()
   Serial.println("System running...");
   Serial.println("========================================\n");
 
-  // Note: Server initialization is handled by Webserver_RTOS_Task
-  // Do NOT call server.begin() here to avoid double initialization
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(LittleFS, "/index.html", "text/html"); });
-
-  // Route cho style.css
   server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(LittleFS, "/styles.css", "text/css"); });
-
-  // Route cho script.js
   server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(LittleFS, "/script.js", "application/javascript"); });
 
   server.serveStatic("/", LittleFS, "/");
-
-  // ... Các cấu hình websocket khác ...
   server.begin();
 }
 
