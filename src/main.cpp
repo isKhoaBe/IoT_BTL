@@ -133,6 +133,8 @@ void setup()
   Serial.println("System running...");
   Serial.println("========================================\n");
 
+  // Only uncomment if Webserver Gauge not updating //
+/*
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(LittleFS, "/index.html", "text/html"); });
   server.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -142,6 +144,7 @@ void setup()
 
   server.serveStatic("/", LittleFS, "/");
   server.begin();
+  */
 }
 
 void loop()
